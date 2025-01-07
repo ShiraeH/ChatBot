@@ -76,8 +76,8 @@ def initialize_vectorstore():
     """
     Initialize Pinecone vector store. Create index if it does not exist.
     """
-    pc = Pinecone(api_key=os.environ["PINECONE_API_KEY"])
-    index_name = os.environ["PINECONE_INDEX"]
+    pc = Pinecone(api_key=os.getenv["PINECONE_API_KEY"])
+    index_name = os.getenv["PINECONE_INDEX"]
     embeddings = OpenAIEmbeddings()
     # Create index if it does not exist
     if index_name not in [idx.name for idx in pc.list_indexes()]:
@@ -87,7 +87,7 @@ def initialize_vectorstore():
             metric='cosine',
             spec=ServerlessSpec(
                 cloud='aws',
-                region=os.environ.get("PINECONE_REGION", "us-west-1")
+                region=os.getenv.get("PINECONE_REGION", "us-west-1")
             )
         )
     return LangchainPinecone.from_existing_index(index_name, embeddings)
