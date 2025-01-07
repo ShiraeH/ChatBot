@@ -3,12 +3,10 @@ import sys
 from glob import glob
 from docx import Document
 from pptx import Presentation
-from PyPDF2 import PdfReader
 from pathlib import Path
 from pinecone import Pinecone, ServerlessSpec
 from dotenv import load_dotenv
 from langchain_community.document_loaders import (
-    PyPDFLoader,
     CSVLoader,
     UnstructuredExcelLoader,
     UnstructuredPowerPointLoader,
@@ -17,7 +15,7 @@ from langchain_unstructured import UnstructuredLoader
 from langchain_openai import OpenAIEmbeddings
 from langchain.text_splitter import CharacterTextSplitter
 from langchain_community.vectorstores import Pinecone as LangchainPinecone
-from docx import Document
+import pikepdf
 import chardet
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -47,6 +45,19 @@ def read_docx(file_path):
     except Exception as e:
         raise ValueError(f"Error reading .docx file {file_path}: {e}")
 
+def read_pdf(file_path):
+    """
+    Read the content of a PDF file using pikepdf.
+    """
+    try:
+        with pikepdf.open(file_path) as pdf:
+            text = ""
+            for page in pdf.pages:
+                text += page.extract_text()
+            return text
+    except Exception as e:
+        raise ValueError(f"Error reading PDF file {file_path}: {e}")
+
 def validate_metadata(metadata):
     """
     Validate and correct metadata values for Pinecone.
@@ -65,8 +76,8 @@ def initialize_vectorstore():
     """
     Initialize Pinecone vector store. Create index if it does not exist.
     """
-    pc = Pinecone(api_key=os.getenv["PINECONE_API_KEY"])
-    index_name = os.getenv["PINECONE_INDEX"]
+    pc = Pinecone(api_key=os.environ["PINECONE_API_KEY"])
+    index_name = os.environ["PINECONE_INDEX"]
     embeddings = OpenAIEmbeddings()
     # Create index if it does not exist
     if index_name not in [idx.name for idx in pc.list_indexes()]:
@@ -76,7 +87,7 @@ def initialize_vectorstore():
             metric='cosine',
             spec=ServerlessSpec(
                 cloud='aws',
-                region=os.getenv.get("PINECONE_REGION", "us-west-1")
+                region=os.environ.get("PINECONE_REGION", "us-west-1")
             )
         )
     return LangchainPinecone.from_existing_index(index_name, embeddings)
@@ -86,7 +97,7 @@ def get_loader(file_path):
     Return appropriate loader or document content based on file type.
     """
     if file_path.endswith(".pdf"):
-        return PyPDFLoader(file_path)
+        return read_pdf(file_path)
     elif file_path.endswith(".csv"):
         return CSVLoader(file_path)
     elif file_path.endswith(".xlsx") or file_path.endswith(".xls"):
@@ -96,12 +107,11 @@ def get_loader(file_path):
         encoding = detect_file_encoding(file_path)
         return UnstructuredLoader(file_path, encoding=encoding)
 
-
 if __name__ == "__main__":
     try:
         folder_path = "C:/Users/cera0/Documents/Job/Proto241214/DATA/"
         file_paths = glob(os.path.join(folder_path, '**/*.*'), recursive=True)
-        
+
         if not file_paths:
             print("No files found in the specified folder.")
             sys.exit()
@@ -113,10 +123,10 @@ if __name__ == "__main__":
             try:
                 print(f"Processing file: {file_path}")
                 loader = get_loader(file_path)
-                
+
                 # If the loader directly returns documents (e.g., for .docx)
-                if isinstance(loader, list) and "page_content" in loader[0]:
-                    raw_docs = loader
+                if isinstance(loader, str):  # For text content loaders
+                    raw_docs = [{"page_content": loader}]
                 else:  # For other loaders that require loading
                     raw_docs = loader.load()
 
