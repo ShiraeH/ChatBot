@@ -18,6 +18,6 @@ onnx==1.16.1
 onnxruntime
 python-docx
 python-pptx
-PyPDF2>=3.0.0
+pikepdf
 certifi
 urllib3
