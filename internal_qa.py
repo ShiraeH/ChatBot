@@ -15,8 +15,8 @@ def create_qa_chain():
     callback = StreamlitCallbackHandler(st.container())
 
     llm = ChatOpenAI(
-        model_name=os.environ["OPENAI_API_MODEL"],
-        temperature=os.environ["OPENAI_API_TEMPERATURE"],
+        model_name=os.getenv["OPENAI_API_MODEL"],
+        temperature=os.getenv["OPENAI_API_TEMPERATURE"],
         streaming=True,
         callbacks=[callback],
     )
