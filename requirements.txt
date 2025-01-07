@@ -19,3 +19,4 @@ cmake
 onnx==1.16.1
 onnxruntime　　
 python-docx
+python-pptx
