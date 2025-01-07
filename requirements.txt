@@ -2,6 +2,8 @@ numpy==1.23.4
 python-magic
 python-magic
 sympy==1.13.1
+pycrypto==0.0.0
+pycryptodome
 langchain
 langchain-unstructured
 langchain-openai
