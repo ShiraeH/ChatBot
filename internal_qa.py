@@ -51,4 +51,5 @@ if prompt:
     # Open AI API からの回答を履歴に追加
     st.session_state.messages.append({"role": "assistant", "content": response["result"]})
 
-    st.session_state.messages.append({"role": "assistant", "content": response["result"]})
+    # アシスタントの応答を表示
+    st.chat_message("assistant").markdown(response["result"])
