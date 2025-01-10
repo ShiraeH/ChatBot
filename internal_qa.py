@@ -8,7 +8,7 @@ from langchain.chains import RetrievalQA
 
 load_dotenv()
 
-st.title("CMTO Chat Bot")
+st.title("TLVTTS Chat Bot")
 
 def create_qa_chain():
     vectorstore = initialize_vectorstore()
