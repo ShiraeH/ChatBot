@@ -46,7 +46,7 @@ if prompt:
     
     with st.chat_message("assistant"):
         qa_chain = create_qa_chain()
-        response = qa_chain.invoke(prompt)
+        response = qa_chain.invoke(conversation_history)
 
     # Open AI API からの回答を履歴に追加
     st.session_state.messages.append({"role": "assistant", "content": response["result"]})
