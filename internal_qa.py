@@ -38,9 +38,17 @@ if prompt:
 
     with st.chat_message("user"):
         st.markdown(prompt)
-
+        
+    # これまでの会話も含めた回答を行う
+    conversation_history = "\n".join(
+        [f"{message['role']}: {message['content']}" for message in st.session_state.messages]
+    )
+    
     with st.chat_message("assistant"):
         qa_chain = create_qa_chain()
         response = qa_chain.invoke(prompt)
+
+    # Open AI API からの回答を履歴に追加
+    st.session_state.messages.append({"role": "assistant", "content": response["result"]})
 
     st.session_state.messages.append({"role": "assistant", "content": response["result"]})
