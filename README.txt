@@ -3,10 +3,10 @@ TODO
 ・PDF/txt以外も処理できるように
 
 ----------------------------------------------------
-A RUNNNING
+A RUNNNING(local)
 ----------------------------------------------------
-① conda activate Py39
-② cd C:\Users\cera0\Documents\Job\Proto241214
+① conda activate YOUR-ENVIRONMETN
+② cd YOUR-PYTHON-FILE-PATH
 ③ streamlit run internal_qa.py --server.port 8080
 〇 python add_document.py
 
