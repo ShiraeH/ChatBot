@@ -53,5 +53,9 @@ if prompt:
     # Open AI API からの回答を履歴に追加
     st.session_state.messages.append({"role": "assistant", "content": response["result"]})
 
+    # メッセージ履歴が10件を超えた場合に古いメッセージを削除
+    if len(st.session_state.messages) > 10:
+        st.session_state.messages.pop(0)
+        
     # アシスタントの応答を表示
     st.chat_message("assistant").markdown(response["result"])
