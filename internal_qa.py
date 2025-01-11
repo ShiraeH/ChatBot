@@ -8,7 +8,9 @@ from langchain.chains import RetrievalQA
 
 load_dotenv()
 
-st.title("TLVTTS Chat Bot")
+logo_path = os.path.join(os.path.dirname(__file__), "LOGO.png")
+st.image(logo_path)
+#st.title("CMTO Chat Bot")
 
 def create_qa_chain():
     vectorstore = initialize_vectorstore()
