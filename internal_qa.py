@@ -20,6 +20,7 @@ def create_qa_chain():
         model_name=os.getenv("OPENAI_API_MODEL"),
         temperature=os.getenv("OPENAI_API_TEMPERATURE"),
         streaming=True,
+        store = False,
         callbacks=[callback],
     )
 
