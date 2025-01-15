@@ -1,23 +1,25 @@
 import os
 import sys
+import fitz
 from glob import glob
-from docx import Document
-from pptx import Presentation
 from pathlib import Path
 from pinecone import Pinecone, ServerlessSpec
 from dotenv import load_dotenv
 from langchain_community.document_loaders import (
     CSVLoader,
-    UnstructuredExcelLoader,
-    UnstructuredPowerPointLoader,
+    UnstructuredExcelLoader
 )
 from langchain_unstructured import UnstructuredLoader
 from langchain_openai import OpenAIEmbeddings
 from langchain.text_splitter import CharacterTextSplitter
 from langchain_community.vectorstores import Pinecone as LangchainPinecone
-import pikepdf
+from langchain.schema import Document
 import chardet
 import urllib3
+import pyocr
+import pyocr.builders
+from PIL import Image
+
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 import ssl
 import certifi
@@ -25,6 +27,19 @@ ssl_context = ssl.create_default_context()
 ssl_context.load_verify_locations(certifi.where())
 
 load_dotenv()
+
+# Path設定
+TESSERACT_PATH = 'C:/Program Files/Tesseract-OCR'  # インストールしたTesseract-OCRのpath
+TESSDATA_PATH = 'C:/Program Files/Tesseract-OCR/tessdata'  # tessdataのpath
+os.environ["PATH"] += os.pathsep + TESSERACT_PATH
+os.environ["TESSDATA_PREFIX"] = TESSDATA_PATH
+
+# Initialize OCR tool
+tools = pyocr.get_available_tools()
+if len(tools) == 0:
+    print("No OCR tool found")
+    sys.exit(1)
+ocr_tool = tools[0]
 
 def detect_file_encoding(file_path):
     """
@@ -35,49 +50,38 @@ def detect_file_encoding(file_path):
     result = chardet.detect(raw_data)
     return result["encoding"]
 
-def read_docx(file_path):
+def PyMuPDFLoaderWithOCR(file_path):
     """
-    Read the content of a .docx file.
+    Load and parse the PDF file into a list of Document objects, using OCR for image-based pages.
     """
-    try:
-        doc = Document(file_path)
-        return "\n".join([p.text for p in doc.paragraphs if p.text.strip()])
-    except Exception as e:
-        raise ValueError(f"Error reading .docx file {file_path}: {e}")
+    documents = []
+    with fitz.open(file_path) as pdf:
+        for page_number in range(len(pdf)):
+            page = pdf[page_number]
+            text = page.get_text("text")  # Extract text from the page
 
-def read_pdf(file_path):
-    """
-    Read the content of a PDF file using pikepdf.
-    """
-    try:
-        with pikepdf.open(file_path) as pdf:
-            text = ""
-            for page in pdf.pages:
-                text += page.extract_text()
-            return text
-    except Exception as e:
-        raise ValueError(f"Error reading PDF file {file_path}: {e}")
+            if not text.strip():  # If text is empty, use OCR
+                pix = page.get_pixmap()
+                img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+                text = ocr_tool.image_to_string(img, builder=pyocr.builders.TextBuilder())
 
-def validate_metadata(metadata):
-    """
-    Validate and correct metadata values for Pinecone.
-    Converts unsupported types (e.g., dict) to strings.
-    """
-    valid_types = (str, int, float, bool, list)
-    for key, value in metadata.items():
-        if not isinstance(value, valid_types):
-            if isinstance(value, dict):
-                metadata[key] = str(value)
-            else:
-                raise ValueError(f"Unsupported metadata type for key '{key}': {type(value)}")
-    return metadata
+            if text.strip():  # Add non-empty text as a Document
+                documents.append(Document(
+                    page_content=text,
+                    metadata={
+                        "page_number": page_number + 1,
+                        "source": file_path
+                    }
+                ))
+
+    return documents
 
 def initialize_vectorstore():
     """
     Initialize Pinecone vector store. Create index if it does not exist.
     """
-    pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
-    index_name = os.getenv("PINECONE_INDEX")
+    pc = Pinecone(api_key=os.environ["PINECONE_API_KEY"])
+    index_name = os.environ["PINECONE_INDEX"]
     embeddings = OpenAIEmbeddings(
         model="text-embedding-3-large"
     )
@@ -89,7 +93,7 @@ def initialize_vectorstore():
             metric='cosine',
             spec=ServerlessSpec(
                 cloud='aws',
-                region=os.getenv.get("PINECONE_REGION", "us-west-1")
+                region=os.environ.get("PINECONE_REGION", "us-west-1")
             )
         )
     return LangchainPinecone.from_existing_index(index_name, embeddings)
@@ -99,7 +103,7 @@ def get_loader(file_path):
     Return appropriate loader or document content based on file type.
     """
     if file_path.endswith(".pdf"):
-        return read_pdf(file_path)
+        return PyMuPDFLoaderWithOCR(file_path)
     elif file_path.endswith(".csv"):
         return CSVLoader(file_path)
     elif file_path.endswith(".xlsx") or file_path.endswith(".xls"):
@@ -111,8 +115,8 @@ def get_loader(file_path):
 
 if __name__ == "__main__":
     try:
-        folder_path = "C:/Users/cera0/Documents/Job/Proto241214/DATA/"
-        file_paths = glob(os.path.join(folder_path, '**/*.*'), recursive=True)
+        folder_path = "YOUR-INPUT-DATA-FOLDER"
+        file_paths = glob(os.path.join(folder_path, '*'), recursive=True)
 
         if not file_paths:
             print("No files found in the specified folder.")
@@ -126,15 +130,16 @@ if __name__ == "__main__":
                 print(f"Processing file: {file_path}")
                 loader = get_loader(file_path)
 
-                # If the loader directly returns documents (e.g., for .docx)
-                if isinstance(loader, str):  # For text content loaders
-                    raw_docs = [{"page_content": loader}]
-                else:  # For other loaders that require loading
+                # PDFや直接リストを返す場合の処理
+                if isinstance(loader, list):  # リストの場合は直接使用
+                    raw_docs = loader
+                else:  # その他のローダーはload()を使用
                     raw_docs = loader.load()
 
                 docs = text_splitter.split_documents(raw_docs)
                 vectorstore.add_documents(docs)
                 print(f"Successfully processed: {file_path}")
+                print(len(docs))
             except Exception as file_error:
                 print(f"Error processing {file_path}: {file_error}")
                 print("Error! tmp stopp")
