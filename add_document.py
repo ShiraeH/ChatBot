@@ -79,8 +79,7 @@ def initialize_vectorstore():
     pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
     index_name = os.getenv("PINECONE_INDEX")
     embeddings = OpenAIEmbeddings(
-        model="text-embedding-3-large",
-        store=False
+        model="text-embedding-3-large"
     )
     # Create index if it does not exist
     if index_name not in [idx.name for idx in pc.list_indexes()]:
