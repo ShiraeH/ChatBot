@@ -17,7 +17,8 @@ B INSTALL
 ① Anaconda
 ② VSCode
 ③ Microsoft Visual C++ Build Tools
-④ 各インストール
+④ tess eractのインストール（https://github.com/UB-Mannheim/tesseract/wiki/）
+⑤ 各インストール
     conda create -n Python39 pyhton=3.9
     conda install -c anaconda certifi
 　　numpy =1.23.4
@@ -39,3 +40,6 @@ B INSTALL
     cmake
 　　onnx==1.6.1
 　　onnxruntime　　
+　　pyocr
+    opencv-python
+    pillow
