@@ -71,9 +71,7 @@ ocr_tool = tools[0]
 
 """
 def detect_file_encoding(file_path):
-    """
-    Detect the encoding of a file.
-    """
+    #Detect the encoding of a file.
     with open(file_path, "rb") as f:
         raw_data = f.read(1024)  # Read the first 1KB to detect encoding
     result = chardet.detect(raw_data)
@@ -82,9 +80,7 @@ def detect_file_encoding(file_path):
 
 """
 def PyMuPDFLoaderWithOCR(file_path):
-    """
-    Load and parse the PDF file into a list of Document objects, using OCR for image-based pages.
-    """
+    #Load and parse the PDF file into a list of Document objects, using OCR for image-based pages.
     documents = []
     with fitz.open(file_path) as pdf:
         for page_number in range(len(pdf)):
@@ -110,9 +106,7 @@ def PyMuPDFLoaderWithOCR(file_path):
 
 """
 def get_loader(file_path):
-    """
-    Return appropriate loader or document content based on file type.
-    """
+    #Return appropriate loader or document content based on file type.
     if file_path.endswith(".pdf"):
         return PyMuPDFLoaderWithOCR(file_path)
     elif file_path.endswith(".csv"):
