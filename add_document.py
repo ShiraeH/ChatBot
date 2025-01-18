@@ -1,46 +1,75 @@
 import os
 import sys
-import fitz
 from glob import glob
 from pathlib import Path
 from pinecone import Pinecone, ServerlessSpec
 from dotenv import load_dotenv
-from langchain_community.document_loaders import (
-    CSVLoader,
-    UnstructuredExcelLoader
-)
 from langchain_unstructured import UnstructuredLoader
 from langchain_openai import OpenAIEmbeddings
 from langchain.text_splitter import CharacterTextSplitter
 from langchain_community.vectorstores import Pinecone as LangchainPinecone
-from langchain.schema import Document
-import chardet
-import urllib3
-import pyocr
-import pyocr.builders
-from PIL import Image
 
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-import ssl
-import certifi
-ssl_context = ssl.create_default_context()
-ssl_context.load_verify_locations(certifi.where())
+#from langchain_community.document_loaders import (
+#    CSVLoader,
+#    UnstructuredExcelLoader
+#)
+#import fitz
+#from langchain.schema import Document
+#import chardet
+#import urllib3
+#import pyocr
+#import pyocr.builders
+#from PIL import Image
+#urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+#import ssl
+#import certifi
+#ssl_context = ssl.create_default_context()
+#ssl_context.load_verify_locations(certifi.where())
 
 load_dotenv()
 
+def initialize_vectorstore():
+    """
+    Initialize Pinecone vector store. Create index if it does not exist.
+    """
+    pc = Pinecone(api_key=os.environ["PINECONE_API_KEY"])
+    index_name = os.environ["PINECONE_INDEX"]
+    embeddings = OpenAIEmbeddings(
+        model="text-embedding-3-large"
+    )
+    # Create index if it does not exist
+    if index_name not in [idx.name for idx in pc.list_indexes()]:
+        pc.create_index(
+            name=index_name,
+            dimension=3072,
+            metric='cosine',
+            spec=ServerlessSpec(
+                cloud='aws',
+                region=os.environ.get("PINECONE_REGION", "us-west-1")
+            )
+        )
+    return LangchainPinecone.from_existing_index(index_name, embeddings)
+
+
+
 # Path設定
+"""
 TESSERACT_PATH = 'C:/Program Files/Tesseract-OCR'  # インストールしたTesseract-OCRのpath
 TESSDATA_PATH = 'C:/Program Files/Tesseract-OCR/tessdata'  # tessdataのpath
 os.environ["PATH"] += os.pathsep + TESSERACT_PATH
 os.environ["TESSDATA_PREFIX"] = TESSDATA_PATH
+"""
 
 # Initialize OCR tool
+"""
 tools = pyocr.get_available_tools()
 if len(tools) == 0:
     print("No OCR tool found")
     sys.exit(1)
 ocr_tool = tools[0]
+"""
 
+"""
 def detect_file_encoding(file_path):
     """
     Detect the encoding of a file.
@@ -49,7 +78,9 @@ def detect_file_encoding(file_path):
         raw_data = f.read(1024)  # Read the first 1KB to detect encoding
     result = chardet.detect(raw_data)
     return result["encoding"]
+"""
 
+"""
 def PyMuPDFLoaderWithOCR(file_path):
     """
     Load and parse the PDF file into a list of Document objects, using OCR for image-based pages.
@@ -75,29 +106,9 @@ def PyMuPDFLoaderWithOCR(file_path):
                 ))
 
     return documents
+"""
 
-def initialize_vectorstore():
-    """
-    Initialize Pinecone vector store. Create index if it does not exist.
-    """
-    pc = Pinecone(api_key=os.environ["PINECONE_API_KEY"])
-    index_name = os.environ["PINECONE_INDEX"]
-    embeddings = OpenAIEmbeddings(
-        model="text-embedding-3-large"
-    )
-    # Create index if it does not exist
-    if index_name not in [idx.name for idx in pc.list_indexes()]:
-        pc.create_index(
-            name=index_name,
-            dimension=3072,
-            metric='cosine',
-            spec=ServerlessSpec(
-                cloud='aws',
-                region=os.environ.get("PINECONE_REGION", "us-west-1")
-            )
-        )
-    return LangchainPinecone.from_existing_index(index_name, embeddings)
-
+"""
 def get_loader(file_path):
     """
     Return appropriate loader or document content based on file type.
@@ -112,7 +123,9 @@ def get_loader(file_path):
         # Detect file encoding and use UnstructuredLoader
         encoding = detect_file_encoding(file_path)
         return UnstructuredLoader(file_path, encoding=encoding)
+"""
 
+"""
 if __name__ == "__main__":
     try:
         folder_path = "YOUR-DATA-PATH"
@@ -149,3 +162,5 @@ if __name__ == "__main__":
 
     except Exception as e:
         print(f"An error occurred: {e}")
+
+"""
