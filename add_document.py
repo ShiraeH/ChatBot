@@ -1,5 +1,6 @@
 import os
-from pinecone import Pinecone, ServerlessSpec
+import pinecone
+from pinecone import ServerlessSpec
 from dotenv import load_dotenv
 from langchain_openai import OpenAIEmbeddings
 from langchain_pinecone import Pinecone as LangchainPinecone
@@ -12,24 +13,24 @@ def initialize_vectorstore():
     """
     Initialize Pinecone vector store. Create index if it does not exist.
     """
-    pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
+    pinecone.init(api_key=os.environ["PINECONE_API_KEY"], environment=os.getenv("PINECONE_ENVIRONMENT"))
 
-    index_name = os.getenv("PINECONE_INDEX")
+    index_name = os.environ["PINECONE_INDEX"]
     embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
 
     # インデックスが存在しない場合に作成
-    if index_name not in pc.list_indexes().names():
-        pc.create_index(
+    if index_name not in pinecone.list_indexes():
+        pinecone.create_index(
             name=index_name,
             dimension=3072,
             metric="cosine",
             spec=ServerlessSpec(
                 cloud="aws",
-                region=os.getenv("PINECONE_REGION", "us-west-1"),
+                region=os.environ.get("PINECONE_REGION", "us-west-1"),
             ),
         )
 
-    index = pc.Index(index_name)
+    index = pinecone.Index(index_name)
     return LangchainPinecone(index, embeddings, text_key="page_content")
 
 if __name__ == "__main__":
