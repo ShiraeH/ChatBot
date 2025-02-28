@@ -7,7 +7,7 @@ langchain-openai
 langchain_community
 streamlit
 python-dotenv
-pinecone-client
+pinecone
 tiktoken
 pi-heif
 cmake
