@@ -5,6 +5,7 @@ langchain
 langchain-unstructured
 langchain-openai
 langchain_community
+langchain_pinecone
 streamlit
 python-dotenv
 pinecone
