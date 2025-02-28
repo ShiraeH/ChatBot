@@ -1,36 +1,28 @@
 import os
-import sys
-import pinecone
-from glob import glob
-from pathlib import Path
-from dotenv import load_dotenv
-from langchain_unstructured import UnstructuredLoader
+from pinecone import Pinecone, ServerlessSpec
 from langchain_openai import OpenAIEmbeddings
-from langchain.text_splitter import CharacterTextSplitter
-from langchain_community.vectorstores import Pinecone as LangchainPinecone
-
-load_dotenv()
+from langchain_pinecone import Pinecone as LangchainPinecone
 
 def initialize_vectorstore():
     """
     Initialize Pinecone vector store. Create index if it does not exist.
     """
-    pinecone.init(api_key=os.environ["PINECONE_API_KEY"])
+    pc = Pinecone(api_key=os.environ["PINECONE_API_KEY"])
+
     index_name = os.environ["PINECONE_INDEX"]
-    embeddings = OpenAIEmbeddings(
-        model="text-embedding-3-large"
-    )
-    # Create index if it does not exist
-    if index_name not in pinecone.list_indexes():
-        pinecone.create_index(
+    embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
+
+    # インデックスが存在しない場合、作成する
+    if index_name not in pc.list_indexes().names():
+        pc.create_index(
             name=index_name,
-            dimension=3072,
-            metric='cosine',
+            dimension=3072,  # 変更しない場合は現在の次元数を確認
+            metric="cosine",
             spec=ServerlessSpec(
-                cloud='aws',
-                region=os.environ.get("PINECONE_REGION", "us-west-1")
-            )
+                cloud="aws",
+                region=os.environ.get("PINECONE_REGION", "us-west-1"),
+            ),
         )
 
-    index = pinecone.Index(index_name)
+    index = pc.Index(index_name)
     return LangchainPinecone(index, embeddings, text_key="page_content")
