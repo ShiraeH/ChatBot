@@ -21,25 +21,4 @@ B INSTALL
 ⑤ 各インストール
     conda create -n Python39 pyhton=3.9
     conda install -c anaconda certifi
-　　numpy =1.23.4
-　　python-magic
-    python-magic-bin
-    sympy==1.13.1
-    langchain
-　　langchain-unstructured
-    langchain-openai
-    langchain_community
-    unstructured
-    unstructured-inference
-    streamlit
-　　python-dotenv
-    pinecone-client tiktoken
-    pi-heif
-    unstructured[image]
-    python-magic
-    cmake
-　　onnx==1.6.1
-　　onnxruntime　　
-　　pyocr
-    opencv-python
-    pillow
+　　その他ライブラリはrequirements.txtを参照
