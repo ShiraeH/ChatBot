@@ -8,7 +8,7 @@ langchain_community
 langchain-pinecone
 streamlit
 python-dotenv
-pinecone
+pinecone-client==2.2.1
 tiktoken
 pi-heif
 cmake
