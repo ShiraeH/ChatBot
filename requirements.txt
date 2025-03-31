@@ -4,7 +4,7 @@ pycryptodome
 langchain==0.1.13
 langchain-openai==0.1.6
 langchain_community==0.0.30
-langchain-unstructured==0.1.5
+langchain-unstructured==0.0.10
 langchain-pinecone
 streamlit
 python-dotenv
