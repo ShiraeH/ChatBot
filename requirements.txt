@@ -1,10 +1,10 @@
 numpy==1.23.4
 sympy==1.13.1
 pycryptodome
-langchain
-langchain-unstructured
-langchain-openai
-langchain_community
+langchain==0.1.13
+langchain-unstructured==0.1.5
+langchain-openai=0.1.6
+langchain_community==0.0.26
 langchain-pinecone
 streamlit
 python-dotenv
